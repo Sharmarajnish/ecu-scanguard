@@ -14,7 +14,314 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          log_level: string | null
+          message: string
+          scan_id: string
+          stage: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          log_level?: string | null
+          message: string
+          scan_id: string
+          stage: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          log_level?: string | null
+          message?: string
+          scan_id?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_logs_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_results: {
+        Row: {
+          created_at: string | null
+          details: string | null
+          framework: string
+          id: string
+          rule_description: string | null
+          rule_id: string
+          scan_id: string
+          status: Database["public"]["Enums"]["compliance_status"] | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: string | null
+          framework: string
+          id?: string
+          rule_description?: string | null
+          rule_id: string
+          scan_id: string
+          status?: Database["public"]["Enums"]["compliance_status"] | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: string | null
+          framework?: string
+          id?: string
+          rule_description?: string | null
+          rule_id?: string
+          scan_id?: string
+          status?: Database["public"]["Enums"]["compliance_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_results_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cve_cache: {
+        Row: {
+          affected_products: Json | null
+          cve_id: string
+          cvss_score: number | null
+          cwe_ids: string[] | null
+          description: string | null
+          fetched_at: string | null
+          id: string
+          modified_date: string | null
+          published_date: string | null
+          reference_links: Json | null
+          severity: string | null
+        }
+        Insert: {
+          affected_products?: Json | null
+          cve_id: string
+          cvss_score?: number | null
+          cwe_ids?: string[] | null
+          description?: string | null
+          fetched_at?: string | null
+          id?: string
+          modified_date?: string | null
+          published_date?: string | null
+          reference_links?: Json | null
+          severity?: string | null
+        }
+        Update: {
+          affected_products?: Json | null
+          cve_id?: string
+          cvss_score?: number | null
+          cwe_ids?: string[] | null
+          description?: string | null
+          fetched_at?: string | null
+          id?: string
+          modified_date?: string | null
+          published_date?: string | null
+          reference_links?: Json | null
+          severity?: string | null
+        }
+        Relationships: []
+      }
+      sbom_components: {
+        Row: {
+          component_name: string
+          created_at: string | null
+          id: string
+          license: string | null
+          scan_id: string
+          source_file: string | null
+          version: string | null
+          vulnerabilities: Json | null
+        }
+        Insert: {
+          component_name: string
+          created_at?: string | null
+          id?: string
+          license?: string | null
+          scan_id: string
+          source_file?: string | null
+          version?: string | null
+          vulnerabilities?: Json | null
+        }
+        Update: {
+          component_name?: string
+          created_at?: string | null
+          id?: string
+          license?: string | null
+          scan_id?: string
+          source_file?: string | null
+          version?: string | null
+          vulnerabilities?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sbom_components_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scans: {
+        Row: {
+          architecture: string | null
+          completed_at: string | null
+          compliance_frameworks: string[] | null
+          created_at: string | null
+          deep_analysis: boolean | null
+          ecu_name: string
+          ecu_type: string
+          executive_summary: string | null
+          file_hash: string | null
+          file_name: string
+          file_size: number | null
+          id: string
+          manufacturer: string | null
+          metadata: Json | null
+          platform: string | null
+          progress: number | null
+          risk_score: number | null
+          status: Database["public"]["Enums"]["scan_status"] | null
+          updated_at: string | null
+          user_id: string
+          version: string | null
+        }
+        Insert: {
+          architecture?: string | null
+          completed_at?: string | null
+          compliance_frameworks?: string[] | null
+          created_at?: string | null
+          deep_analysis?: boolean | null
+          ecu_name: string
+          ecu_type: string
+          executive_summary?: string | null
+          file_hash?: string | null
+          file_name: string
+          file_size?: number | null
+          id?: string
+          manufacturer?: string | null
+          metadata?: Json | null
+          platform?: string | null
+          progress?: number | null
+          risk_score?: number | null
+          status?: Database["public"]["Enums"]["scan_status"] | null
+          updated_at?: string | null
+          user_id: string
+          version?: string | null
+        }
+        Update: {
+          architecture?: string | null
+          completed_at?: string | null
+          compliance_frameworks?: string[] | null
+          created_at?: string | null
+          deep_analysis?: boolean | null
+          ecu_name?: string
+          ecu_type?: string
+          executive_summary?: string | null
+          file_hash?: string | null
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          manufacturer?: string | null
+          metadata?: Json | null
+          platform?: string | null
+          progress?: number | null
+          risk_score?: number | null
+          status?: Database["public"]["Enums"]["scan_status"] | null
+          updated_at?: string | null
+          user_id?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
+      vulnerabilities: {
+        Row: {
+          affected_component: string | null
+          affected_function: string | null
+          attack_vector: string | null
+          code_snippet: string | null
+          created_at: string | null
+          cve_id: string | null
+          cvss_score: number | null
+          cwe_id: string | null
+          description: string | null
+          detection_method: string | null
+          id: string
+          impact: string | null
+          line_number: number | null
+          llm_enrichment: Json | null
+          remediation: string | null
+          scan_id: string
+          severity: Database["public"]["Enums"]["severity_level"]
+          status: Database["public"]["Enums"]["vulnerability_status"] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          affected_component?: string | null
+          affected_function?: string | null
+          attack_vector?: string | null
+          code_snippet?: string | null
+          created_at?: string | null
+          cve_id?: string | null
+          cvss_score?: number | null
+          cwe_id?: string | null
+          description?: string | null
+          detection_method?: string | null
+          id?: string
+          impact?: string | null
+          line_number?: number | null
+          llm_enrichment?: Json | null
+          remediation?: string | null
+          scan_id: string
+          severity?: Database["public"]["Enums"]["severity_level"]
+          status?: Database["public"]["Enums"]["vulnerability_status"] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          affected_component?: string | null
+          affected_function?: string | null
+          attack_vector?: string | null
+          code_snippet?: string | null
+          created_at?: string | null
+          cve_id?: string | null
+          cvss_score?: number | null
+          cwe_id?: string | null
+          description?: string | null
+          detection_method?: string | null
+          id?: string
+          impact?: string | null
+          line_number?: number | null
+          llm_enrichment?: Json | null
+          remediation?: string | null
+          scan_id?: string
+          severity?: Database["public"]["Enums"]["severity_level"]
+          status?: Database["public"]["Enums"]["vulnerability_status"] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vulnerabilities_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +330,22 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      compliance_status: "pass" | "fail" | "warning"
+      scan_status:
+        | "queued"
+        | "parsing"
+        | "decompiling"
+        | "analyzing"
+        | "enriching"
+        | "complete"
+        | "failed"
+      severity_level: "critical" | "high" | "medium" | "low" | "info"
+      vulnerability_status:
+        | "new"
+        | "reopened"
+        | "fixed"
+        | "false_positive"
+        | "risk_accepted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +472,25 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      compliance_status: ["pass", "fail", "warning"],
+      scan_status: [
+        "queued",
+        "parsing",
+        "decompiling",
+        "analyzing",
+        "enriching",
+        "complete",
+        "failed",
+      ],
+      severity_level: ["critical", "high", "medium", "low", "info"],
+      vulnerability_status: [
+        "new",
+        "reopened",
+        "fixed",
+        "false_positive",
+        "risk_accepted",
+      ],
+    },
   },
 } as const
