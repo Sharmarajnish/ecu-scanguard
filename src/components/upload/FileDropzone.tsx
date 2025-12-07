@@ -12,7 +12,12 @@ interface FileDropzoneProps {
 
 const acceptedFormats = {
   'application/octet-stream': ['.vbf', '.bin', '.hex', '.elf', '.s19', '.srec'],
+  'text/plain': ['.c', '.h', '.cpp', '.hpp'],
+  'text/xml': ['.arxml', '.xml'],
+  'application/xml': ['.arxml', '.xml'],
 };
+
+const allExtensions = ['.vbf', '.bin', '.hex', '.elf', '.s19', '.srec', '.c', '.h', '.arxml'];
 
 export function FileDropzone({ onFileSelect, selectedFile, onClear }: FileDropzoneProps) {
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +26,7 @@ export function FileDropzone({ onFileSelect, selectedFile, onClear }: FileDropzo
     setError(null);
     
     if (rejectedFiles.length > 0) {
-      setError('Invalid file format. Please upload .vbf, .bin, .hex, .elf, .s19, or .srec files.');
+      setError('Invalid file format. Please upload VBF, binary, C source, or AUTOSAR files.');
       return;
     }
     
@@ -83,7 +88,7 @@ export function FileDropzone({ onFileSelect, selectedFile, onClear }: FileDropzo
               Drag and drop your firmware file, or click to browse
             </p>
             <div className="flex flex-wrap justify-center gap-2">
-              {['.vbf', '.bin', '.hex', '.elf', '.s19'].map((ext) => (
+              {allExtensions.map((ext) => (
                 <span 
                   key={ext}
                   className="px-2 py-1 rounded-md bg-muted text-xs font-mono text-muted-foreground"
@@ -92,7 +97,7 @@ export function FileDropzone({ onFileSelect, selectedFile, onClear }: FileDropzo
                 </span>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-4">Maximum file size: 100MB</p>
+            <p className="text-xs text-muted-foreground mt-4">VBF, ANSI C, AUTOSAR • Max 100MB</p>
           </div>
         </div>
       ) : (

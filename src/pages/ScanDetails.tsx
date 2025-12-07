@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { PipelineStatus } from '@/components/scan/PipelineStatus';
 import { ExecutiveSummary } from '@/components/scan/ExecutiveSummary';
 import { VulnerabilityList } from '@/components/scan/VulnerabilityList';
+import { CodeViewer } from '@/components/scan/CodeViewer';
 import { useScan, useVulnerabilities, useComplianceResults, useAnalysisLogs, useGenerateReport } from '@/hooks/useScans';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -309,7 +310,12 @@ export default function ScanDetails() {
           />
         )}
 
-        {/* Vulnerabilities */}
+        {/* Code Security Viewer - Groups by file with LLM analysis */}
+        {scan.status === 'complete' && vulnerabilities.length > 0 && (
+          <CodeViewer vulnerabilities={vulnerabilities} fileName={scan.file_name} />
+        )}
+
+        {/* Detailed Vulnerability List */}
         {scan.status === 'complete' && vulnerabilities.length > 0 && (
           <VulnerabilityList vulnerabilities={vulnerabilities} />
         )}
