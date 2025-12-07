@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, Filter, ExternalLink, Shield } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ScanSelector } from '@/components/ui/scan-selector';
 import { useVulnerabilities, useScans } from '@/hooks/useScans';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -31,11 +32,18 @@ export default function Vulnerabilities() {
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedScan, setSelectedScan] = useState('all');
 
   const { data: vulnerabilities = [], isLoading } = useVulnerabilities();
   const { data: scans = [] } = useScans();
 
-  const filteredVulns = vulnerabilities.filter((vuln) => {
+  // Filter by selected scan first
+  const scanFilteredVulns = useMemo(() => {
+    if (selectedScan === 'all') return vulnerabilities;
+    return vulnerabilities.filter(v => v.scan_id === selectedScan);
+  }, [vulnerabilities, selectedScan]);
+
+  const filteredVulns = scanFilteredVulns.filter((vuln) => {
     const matchesSearch = 
       vuln.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vuln.cve_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,10 +59,10 @@ export default function Vulnerabilities() {
   };
 
   const severityCounts = {
-    critical: vulnerabilities.filter((v) => v.severity === 'critical').length,
-    high: vulnerabilities.filter((v) => v.severity === 'high').length,
-    medium: vulnerabilities.filter((v) => v.severity === 'medium').length,
-    low: vulnerabilities.filter((v) => v.severity === 'low').length,
+    critical: scanFilteredVulns.filter((v) => v.severity === 'critical').length,
+    high: scanFilteredVulns.filter((v) => v.severity === 'high').length,
+    medium: scanFilteredVulns.filter((v) => v.severity === 'medium').length,
+    low: scanFilteredVulns.filter((v) => v.severity === 'low').length,
   };
 
   if (isLoading) {
@@ -77,16 +85,23 @@ export default function Vulnerabilities() {
     <AppLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-destructive/20 to-warning/20 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-destructive" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-destructive/20 to-warning/20 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Vulnerability Database</h1>
+              <p className="text-muted-foreground">
+                All detected security vulnerabilities across ECU scans
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Vulnerability Database</h1>
-            <p className="text-muted-foreground">
-              All detected security vulnerabilities across ECU scans
-            </p>
-          </div>
+          <ScanSelector 
+            value={selectedScan} 
+            onChange={setSelectedScan}
+            className="w-[250px] bg-muted/50"
+          />
         </div>
 
         {/* Stats */}

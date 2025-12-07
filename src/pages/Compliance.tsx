@@ -1,21 +1,38 @@
+import { useState, useMemo } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, FileText } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { useScans } from '@/hooks/useScans';
-import { useComplianceResults } from '@/hooks/useScans';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScanSelector } from '@/components/ui/scan-selector';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 const frameworks = ['MISRA C:2012', 'ISO 21434', 'AUTOSAR', 'ISO 26262'];
 
 export default function Compliance() {
+  const [selectedScan, setSelectedScan] = useState('all');
   const { data: scans = [] } = useScans();
   
-  // Get compliance results from all completed scans
-  const completedScanIds = scans.filter(s => s.status === 'complete').map(s => s.id);
-  
-  // We'll fetch compliance results for all scans by not passing a specific scanId
-  const { data: complianceResults = [], isLoading } = useComplianceResults(completedScanIds[0]);
+  // Fetch all compliance results
+  const { data: allComplianceResults = [], isLoading } = useQuery({
+    queryKey: ['compliance-results-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('compliance_results')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Filter by selected scan
+  const complianceResults = useMemo(() => {
+    if (selectedScan === 'all') return allComplianceResults;
+    return allComplianceResults.filter(r => r.scan_id === selectedScan);
+  }, [allComplianceResults, selectedScan]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -40,7 +57,11 @@ export default function Compliance() {
   };
 
   const getFrameworkStats = (framework: string) => {
-    const results = complianceResults.filter((r) => r.framework === framework);
+    // Normalize framework names for matching
+    const normalizedFramework = framework.replace(':2012', '').toLowerCase();
+    const results = complianceResults.filter((r) => 
+      r.framework.toLowerCase().includes(normalizedFramework.split(' ')[0])
+    );
     return {
       passed: results.filter((r) => r.status === 'pass').length,
       failed: results.filter((r) => r.status === 'fail').length,
@@ -68,16 +89,23 @@ export default function Compliance() {
     <AppLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-success/20 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-primary" />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-success/20 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Compliance Reports</h1>
+              <p className="text-muted-foreground">
+                Automotive security compliance analysis and reporting
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Compliance Reports</h1>
-            <p className="text-muted-foreground">
-              Automotive security compliance analysis and reporting
-            </p>
-          </div>
+          <ScanSelector 
+            value={selectedScan} 
+            onChange={setSelectedScan}
+            className="w-[250px] bg-muted/50"
+          />
         </div>
 
         {/* Framework Overview */}
