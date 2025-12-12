@@ -267,8 +267,8 @@ export default function ScanCentre() {
                 architecture: 'x86_64',
                 deep_analysis: true,
                 compliance_frameworks: ['ISO 21434', 'MISRA C'],
-                status: 'queued',
-                progress: 0,
+                status: 'analyzing',
+                progress: 5,
                 // Store git info in metadata JSON field
                 metadata: {
                     git_url: gitUrl,

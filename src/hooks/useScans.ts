@@ -3,9 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { runMockAnalysis, runMockRepositoryAnalysis } from '@/services/mockAnalysis';
+import { runRealRepositoryAnalysis } from '@/services/realAnalysis';
 
-// Set to true to use mock analysis (for development without deployed Edge Functions)
-const USE_MOCK_ANALYSIS = true;
+// Set to true to use mock analysis (for development without Gemini API key)
+// Set to false for real SAST + AI scanning
+const USE_MOCK_ANALYSIS = false;
 
 export type Scan = Tables<'scans'>;
 export type Vulnerability = Tables<'vulnerabilities'>;
@@ -235,11 +237,29 @@ export function useStartRepositoryAnalysis() {
         complianceFrameworks: string[];
       };
     }) => {
-      if (USE_MOCK_ANALYSIS) {
-        // Use mock analysis for local development (don't await - run in background)
+      // Get Gemini API key from localStorage (set in Settings page)
+      const geminiApiKey = localStorage.getItem('gemini_api_key');
+
+      if (USE_MOCK_ANALYSIS || !geminiApiKey) {
+        // Use mock analysis if no API key configured
+        if (!geminiApiKey) {
+          console.warn('No Gemini API key found. Using mock analysis. Set key in Settings.');
+        }
         runMockRepositoryAnalysis(scanId, gitUrl, gitBranch, gitProvider, metadata).catch(console.error);
         return { success: true, message: 'Mock repository analysis started' };
       }
+
+      // Use REAL SAST + AI analysis with Gemini
+      runRealRepositoryAnalysis(
+        scanId,
+        gitUrl,
+        gitBranch,
+        gitProvider,
+        accessToken,
+        geminiApiKey,
+        metadata
+      ).catch(console.error);
+      return { success: true, message: 'Real SAST + AI analysis started' };
 
       // Use Edge Function for production
       const { data, error } = await supabase.functions.invoke('clone-repository', {

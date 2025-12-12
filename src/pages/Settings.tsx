@@ -384,27 +384,64 @@ export default function Settings() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Key className="w-5 h-5 text-primary" />
-              <CardTitle>API Configuration</CardTitle>
+              <CardTitle>AI & API Configuration</CardTitle>
             </div>
             <CardDescription>
-              Configure API keys for external integrations
+              Configure API keys for AI-powered security analysis
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="anthropic">Anthropic API Key (Claude)</Label>
-              <Input
-                id="anthropic"
-                type="password"
-                placeholder="sk-ant-..."
-                className="bg-muted/50 font-mono"
-              />
+          <CardContent className="space-y-6">
+            {/* Gemini API Key - Primary */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-white">G</span>
+                </div>
+                <Label className="text-base font-medium">Google Gemini API Key</Label>
+                <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Required for Real Scanning</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  id="gemini-key"
+                  type="password"
+                  placeholder="Enter your Gemini API key"
+                  defaultValue={localStorage.getItem('gemini_api_key') || ''}
+                  className="bg-muted/50 font-mono flex-1"
+                />
+                <Button
+                  onClick={() => {
+                    const input = document.getElementById('gemini-key') as HTMLInputElement;
+                    const key = input?.value?.trim();
+                    if (key) {
+                      localStorage.setItem('gemini_api_key', key);
+                      toast({ title: 'Gemini API Key Saved', description: 'Real SAST + AI scanning is now enabled.' });
+                    } else {
+                      localStorage.removeItem('gemini_api_key');
+                      toast({ title: 'Key Removed', description: 'Will use mock analysis instead.', variant: 'destructive' });
+                    }
+                  }}
+                >
+                  Save Key
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
-                Used for AI-powered vulnerability enrichment and remediation suggestions
+                Used for AI-powered vulnerability detection. Get your key from{' '}
+                <a
+                  href="https://aistudio.google.com/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Google AI Studio <ExternalLink className="w-3 h-3" />
+                </a>
               </p>
             </div>
+
+            <Separator />
+
+            {/* NVD API Key - Optional */}
             <div className="space-y-2">
-              <Label htmlFor="nvd">NVD API Key</Label>
+              <Label htmlFor="nvd">NVD API Key (Optional)</Label>
               <Input
                 id="nvd"
                 type="password"
@@ -412,10 +449,9 @@ export default function Settings() {
                 className="bg-muted/50 font-mono"
               />
               <p className="text-xs text-muted-foreground">
-                For enhanced CVE database queries (optional but recommended)
+                For enhanced CVE database queries (optional but recommended for production)
               </p>
             </div>
-            <Button className="mt-4">Save API Keys</Button>
           </CardContent>
         </Card>
 
