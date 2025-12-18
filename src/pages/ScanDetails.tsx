@@ -28,7 +28,7 @@ export default function ScanDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   const { data: scan, isLoading: scanLoading } = useScan(id);
   const { data: vulnerabilities = [] } = useVulnerabilities(id);
   const { data: complianceResults = [] } = useComplianceResults(id);
@@ -44,6 +44,11 @@ export default function ScanDetails() {
       .channel(`scan-${id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'scans', filter: `id=eq.${id}` }, () => {
         queryClient.invalidateQueries({ queryKey: ['scan', id] });
+        // Also refetch related data when scan updates (e.g., when it completes)
+        queryClient.invalidateQueries({ queryKey: ['vulnerabilities', id] });
+        queryClient.invalidateQueries({ queryKey: ['compliance-results', id] });
+        queryClient.invalidateQueries({ queryKey: ['sbom-components', id] });
+        queryClient.invalidateQueries({ queryKey: ['logs', id] });
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'vulnerabilities', filter: `scan_id=eq.${id}` }, () => {
         queryClient.invalidateQueries({ queryKey: ['vulnerabilities', id] });
@@ -58,60 +63,60 @@ export default function ScanDetails() {
 
   const handleDownloadReport = async (format: 'markdown' | 'json' | 'pdf') => {
     if (!id) return;
-    
+
     try {
       const result = await generateReport.mutateAsync({ scanId: id, format });
       const ecuName = scan?.ecu_name || id;
-      
+
       if (format === 'pdf') {
         const reportData = typeof result.content === 'string' ? JSON.parse(result.content) : result.content;
         const pdf = new jsPDF();
-        
+
         pdf.setFontSize(20);
         pdf.setTextColor(30, 30, 30);
         pdf.text('ECU Vulnerability Scan Report', 20, 20);
-        
+
         pdf.setFontSize(12);
         pdf.setTextColor(80, 80, 80);
         pdf.text(`ECU: ${reportData.scan.ecu_name}`, 20, 35);
         pdf.text(`Type: ${reportData.scan.ecu_type}`, 20, 42);
         pdf.text(`Risk Score: ${reportData.scan.risk_score || 'N/A'}/100`, 20, 49);
         pdf.text(`Generated: ${new Date().toLocaleString()}`, 20, 56);
-        
+
         pdf.setFontSize(14);
         pdf.setTextColor(30, 30, 30);
         pdf.text('Vulnerability Summary', 20, 70);
-        
+
         pdf.setFontSize(10);
         pdf.setTextColor(80, 80, 80);
         const vulnBreakdown = reportData.summary.vulnerability_breakdown;
         pdf.text(`Critical: ${vulnBreakdown.critical} | High: ${vulnBreakdown.high} | Medium: ${vulnBreakdown.medium} | Low: ${vulnBreakdown.low}`, 20, 80);
-        
+
         if (reportData.scan.executive_summary) {
           pdf.setFontSize(14);
           pdf.setTextColor(30, 30, 30);
           pdf.text('Executive Summary', 20, 95);
-          
+
           pdf.setFontSize(9);
           pdf.setTextColor(80, 80, 80);
           const splitSummary = pdf.splitTextToSize(reportData.scan.executive_summary, 170);
           pdf.text(splitSummary, 20, 105);
         }
-        
+
         pdf.addPage();
         pdf.setFontSize(14);
         pdf.setTextColor(30, 30, 30);
         pdf.text('Vulnerabilities', 20, 20);
-        
+
         let yPos = 35;
         reportData.vulnerabilities?.slice(0, 15).forEach((vuln: any, index: number) => {
           if (yPos > 270) { pdf.addPage(); yPos = 20; }
-          
+
           pdf.setFontSize(10);
           pdf.text(`${index + 1}. [${vuln.severity.toUpperCase()}] ${vuln.title}`, 20, yPos);
           yPos += 12;
         });
-        
+
         pdf.save(`scan-report-${ecuName}.pdf`);
       } else if (format === 'markdown') {
         const content = typeof result.content === 'string' ? result.content : JSON.stringify(result.content, null, 2);
@@ -132,7 +137,7 @@ export default function ScanDetails() {
         a.click();
         URL.revokeObjectURL(url);
       }
-      
+
       toast({ title: 'Report downloaded', description: `Security report (${format.toUpperCase()}) has been downloaded.` });
     } catch (error) {
       toast({ title: 'Download failed', description: error instanceof Error ? error.message : 'Failed to generate report', variant: 'destructive' });
@@ -192,7 +197,7 @@ export default function ScanDetails() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Scans
             </Button>
-            
+
             <div className="flex items-center gap-4 mb-2">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                 <Cpu className="w-6 h-6 text-primary" />

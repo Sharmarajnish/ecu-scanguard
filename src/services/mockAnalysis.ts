@@ -106,33 +106,58 @@ export async function runMockAnalysis(
     }
 ): Promise<void> {
     try {
+        console.log('[mockAnalysis] Starting mock analysis for scan:', scanId);
+
+        // Check if user is authenticated (required for RLS)
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('[mockAnalysis] Auth session:', session ? 'AUTHENTICATED' : 'NOT AUTHENTICATED');
+        if (session?.user) {
+            console.log('[mockAnalysis] User ID:', session.user.id);
+        }
+
         // Update status to analyzing
-        await supabase
+        const { error: statusError } = await supabase
             .from('scans')
             .update({ status: 'analyzing', started_at: new Date().toISOString() })
             .eq('id', scanId);
 
+        if (statusError) {
+            console.error('[mockAnalysis] Failed to update status:', statusError);
+        } else {
+            console.log('[mockAnalysis] Status update successful');
+        }
+
         await addLogEntry(scanId, 'initialization', `Starting analysis of ${fileName}...`);
 
         // Stage 1: File parsing (simulated delay)
+        console.log('[mockAnalysis] Stage 1: Parsing...');
         await new Promise(resolve => setTimeout(resolve, 1500));
         await addLogEntry(scanId, 'parsing', 'Binary file parsed successfully. Detected ARM Cortex-M4 architecture.');
 
         // Stage 2: SAST Analysis
+        console.log('[mockAnalysis] Stage 2: SAST Analysis...');
         await new Promise(resolve => setTimeout(resolve, 2000));
         await addLogEntry(scanId, 'sast', 'Static analysis complete. Found potential vulnerabilities.');
 
         // Stage 3: Insert vulnerabilities
+        console.log('[mockAnalysis] Stage 3: Inserting vulnerabilities...');
         const vulnsToInsert = mockVulnerabilities.slice(0, Math.floor(Math.random() * 3) + 2).map(v => ({
             scan_id: scanId,
             ...v,
         }));
 
-        await supabase.from('vulnerabilities').insert(vulnsToInsert);
+        console.log('[mockAnalysis] Vulnerabilities to insert:', vulnsToInsert.length);
+        const { data: insertedVulns, error: vulnError } = await supabase.from('vulnerabilities').insert(vulnsToInsert).select();
+        if (vulnError) {
+            console.error('[mockAnalysis] Failed to insert vulnerabilities:', vulnError);
+        } else {
+            console.log('[mockAnalysis] Successfully inserted vulnerabilities:', insertedVulns?.length);
+        }
         await addLogEntry(scanId, 'vulnerabilities', `Identified ${vulnsToInsert.length} security findings.`);
 
         // Stage 4: Compliance checking
         if (metadata.complianceFrameworks.length > 0) {
+            console.log('[mockAnalysis] Stage 4: Compliance checking...');
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             const complianceToInsert = mockComplianceResults
@@ -143,18 +168,25 @@ export async function runMockAnalysis(
                 }));
 
             if (complianceToInsert.length > 0) {
-                await supabase.from('compliance_results').insert(complianceToInsert);
+                const { error: compError } = await supabase.from('compliance_results').insert(complianceToInsert);
+                if (compError) {
+                    console.error('[mockAnalysis] Failed to insert compliance:', compError);
+                }
             }
             await addLogEntry(scanId, 'compliance', `Compliance check complete for ${metadata.complianceFrameworks.join(', ')}.`);
         }
 
         // Stage 5: SBOM generation
+        console.log('[mockAnalysis] Stage 5: SBOM generation...');
         await new Promise(resolve => setTimeout(resolve, 1000));
         const sbomToInsert = mockSbomComponents.map(c => ({
             scan_id: scanId,
             ...c,
         }));
-        await supabase.from('sbom_components').insert(sbomToInsert);
+        const { error: sbomError } = await supabase.from('sbom_components').insert(sbomToInsert);
+        if (sbomError) {
+            console.error('[mockAnalysis] Failed to insert SBOM:', sbomError);
+        }
         await addLogEntry(scanId, 'sbom', `SBOM generated with ${sbomToInsert.length} components.`);
 
         // Calculate risk score
@@ -163,7 +195,8 @@ export async function runMockAnalysis(
         const riskScore = Math.min(100, criticalCount * 25 + highCount * 15 + 20);
 
         // Complete the scan
-        await supabase
+        console.log('[mockAnalysis] Completing scan with risk score:', riskScore);
+        const { error: completeError } = await supabase
             .from('scans')
             .update({
                 status: 'complete',
@@ -172,7 +205,12 @@ export async function runMockAnalysis(
             })
             .eq('id', scanId);
 
+        if (completeError) {
+            console.error('[mockAnalysis] Failed to complete scan:', completeError);
+        }
+
         await addLogEntry(scanId, 'complete', `Analysis complete. Risk score: ${riskScore}/100`);
+        console.log('[mockAnalysis] Analysis complete!');
 
     } catch (error) {
         console.error('Mock analysis error:', error);
@@ -265,7 +303,13 @@ export async function runMockRepositoryAnalysis(
             },
         ];
 
-        await supabase.from('vulnerabilities').insert(repoVulns);
+        console.log('[mockAnalysis] Inserting vulnerabilities:', repoVulns);
+        const { data: insertedVulns, error: vulnError } = await supabase.from('vulnerabilities').insert(repoVulns).select();
+        if (vulnError) {
+            console.error('[mockAnalysis] Failed to insert vulnerabilities:', vulnError);
+        } else {
+            console.log('[mockAnalysis] Successfully inserted vulnerabilities:', insertedVulns);
+        }
         await addLogEntry(scanId, 'vulnerabilities', `Identified ${repoVulns.length} security findings.`);
 
         // Stage 5: SBOM

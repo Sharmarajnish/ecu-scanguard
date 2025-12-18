@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4-0-3.xsd">
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>ECU_Configuration</SHORT-NAME>
+      <ELEMENTS>
+        <ECU-INSTANCE>
+          <SHORT-NAME>Engine_ECU</SHORT-NAME>
+          <VERSION>4.0.0</VERSION>
+          <DESC>
+            <L-2 L="EN">Engine Control Unit with security vulnerabilities</L-2>
+          </DESC>
+        </ECU-INSTANCE>
+        <SECURITY-MODULE>
+          <SHORT-NAME>Missing_CSM</SHORT-NAME>
+          <STATUS>NOT_IMPLEMENTED</STATUS>
+        </SECURITY-MODULE>
+        <CRYPTO-MODULE>
+          <SHORT-NAME>Missing_CRYPTO</SHORT-NAME>
+          <STATUS>NOT_IMPLEMENTED</STATUS>
+        </CRYPTO-MODULE>
+        <SECOC-MODULE>
+          <SHORT-NAME>Missing_SECOC</SHORT-NAME>
+          <STATUS>NOT_IMPLEMENTED</STATUS>
+        </SECOC-MODULE>
+        <FIM-MODULE>
+          <SHORT-NAME>Missing_FIM</SHORT-NAME>
+          <STATUS>NOT_IMPLEMENTED</STATUS>
+        </FIM-MODULE>
+        <VULNERABLE-FUNCTION>
+          <SHORT-NAME>strcpy_usage</SHORT-NAME>
+          <FUNCTION-NAME>process_can_message</FUNCTION-NAME>
+          <SECURITY-LEVEL>VULNERABLE</SECURITY-LEVEL>
+        </VULNERABLE-FUNCTION>
+        <HARDCODED-CREDENTIALS>
+          <SHORT-NAME>admin_password</SHORT-NAME>
+          <VALUE>admin123</VALUE>
+          <SECURITY-LEVEL>CRITICAL</SECURITY-LEVEL>
+        </HARDCODED-CREDENTIALS>
+      </ELEMENTS>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>

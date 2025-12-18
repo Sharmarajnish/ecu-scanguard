@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AUTOSAR xmlns="http://autosar.org/schema/r4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://autosar.org/schema/r4.0 AUTOSAR_4-0-3.xsd">
+  <AR-PACKAGES>
+    <AR-PACKAGE>
+      <SHORT-NAME>ECU_Configuration</SHORT-NAME>
+      <ELEMENTS>
+        <ECU-INSTANCE>
+          <SHORT-NAME>EngineControlUnit</SHORT-NAME>
+          <DESC>
+            <L-2 L="EN">Engine Control Unit Configuration</L-2>
+          </DESC>
+          <COMMUNICATION-CONNECTORS>
+            <COMMUNICATION-CONNECTOR>
+              <SHORT-NAME>CAN_Communication</SHORT-NAME>
+              <COMMUNICATION-INTERFACE-REF DEST="COMMUNICATION-INTERFACE">/ECU_Configuration/CommunicationInterfaces/CAN_Interface</COMMUNICATION-INTERFACE-REF>
+            </COMMUNICATION-CONNECTOR>
+          </COMMUNICATION-CONNECTORS>
+        </ECU-INSTANCE>
+        <COMMUNICATION-INTERFACES>
+          <COMMUNICATION-INTERFACE>
+            <SHORT-NAME>CAN_Interface</SHORT-NAME>
+            <DESC>
+              <L-2 L="EN">CAN Communication Interface</L-2>
+            </DESC>
+            <COMMUNICATION-INTERFACE-REF DEST="COMMUNICATION-INTERFACE">/ECU_Configuration/CommunicationInterfaces/CAN_Interface</COMMUNICATION-INTERFACE-REF>
+          </COMMUNICATION-INTERFACE>
+        </COMMUNICATION-INTERFACES>
+        <SOFTWARE-COMPONENTS>
+          <APPLICATION-SW-COMPONENT-TYPE>
+            <SHORT-NAME>EngineControlApp</SHORT-NAME>
+            <DESC>
+              <L-2 L="EN">Engine Control Application</L-2>
+            </DESC>
+            <PORTS>
+              <R-PORT-PROTOTYPE>
+                <SHORT-NAME>EngineDataPort</SHORT-NAME>
+                <REQUIRED-INTERFACE-TREF DEST="APPLICATION-SW-COMPONENT-TYPE">/ECU_Configuration/SoftwareComponents/EngineDataInterface</REQUIRED-INTERFACE-TREF>
+              </R-PORT-PROTOTYPE>
+            </PORTS>
+          </APPLICATION-SW-COMPONENT-TYPE>
+        </SOFTWARE-COMPONENTS>
+      </ELEMENTS>
+    </AR-PACKAGE>
+  </AR-PACKAGES>
+</AUTOSAR>

@@ -190,8 +190,8 @@ export default function ScanCentre() {
                 architecture: data.architecture,
                 deep_analysis: data.enableDeepAnalysis,
                 compliance_frameworks: data.complianceFrameworks,
-                status: 'queued',
-                progress: 0,
+                status: 'analyzing',
+                progress: 5,
             });
 
             toast({
@@ -318,12 +318,33 @@ export default function ScanCentre() {
     };
 
     const handleDeleteScan = async (scanId: string) => {
-        // Implementation would go here
-        toast({
-            title: 'Scan deleted',
-            description: 'The scan has been removed.',
-        });
-        refetch();
+        try {
+            // Delete related data first (foreign key constraints)
+            await supabase.from('vulnerabilities').delete().eq('scan_id', scanId);
+            await supabase.from('sbom_components').delete().eq('scan_id', scanId);
+            await supabase.from('compliance_results').delete().eq('scan_id', scanId);
+            await supabase.from('analysis_logs').delete().eq('scan_id', scanId);
+
+            // Delete the scan
+            const { error } = await supabase.from('scans').delete().eq('id', scanId);
+
+            if (error) {
+                throw error;
+            }
+
+            toast({
+                title: 'Scan deleted',
+                description: 'The scan has been removed successfully.',
+            });
+            refetch();
+        } catch (error) {
+            console.error('Delete scan error:', error);
+            toast({
+                title: 'Delete failed',
+                description: error instanceof Error ? error.message : 'Failed to delete scan',
+                variant: 'destructive',
+            });
+        }
     };
 
     return (
