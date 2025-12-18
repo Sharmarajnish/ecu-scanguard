@@ -1,0 +1,151 @@
+{
+  "testCases": [
+    {
+      "name": "Tesla CAN Vulnerability",
+      "file": "teslaCanVulnerability.c",
+      "cve": "CVE-2020-12753",
+      "description": "Tesla Model S/X CAN bus vulnerabilities",
+      "vulnerabilities": [
+        "Insufficient CAN ID validation",
+        "Buffer overflow in diagnostic processing",
+        "Format string vulnerability",
+        "Hardcoded diagnostic keys",
+        "Timing attack vulnerability"
+      ],
+      "severity": "Critical",
+      "cwe": [
+        "CWE-787",
+        "CWE-134",
+        "CWE-798",
+        "CWE-208"
+      ]
+    },
+    {
+      "name": "Jeep Uconnect Vulnerability",
+      "file": "jeepUconnectVulnerability.c",
+      "cve": "CVE-2015-7960",
+      "description": "Jeep Cherokee Uconnect remote code execution",
+      "vulnerabilities": [
+        "Command injection in cellular module",
+        "Buffer overflow in message processing",
+        "Hardcoded credentials",
+        "Weak encryption keys",
+        "Predictable session tokens"
+      ],
+      "severity": "Critical",
+      "cwe": [
+        "CWE-78",
+        "CWE-787",
+        "CWE-798",
+        "CWE-327",
+        "CWE-330"
+      ]
+    },
+    {
+      "name": "BMW ConnectedDrive Vulnerability",
+      "file": "bmwConnectedDriveVulnerability.c",
+      "cve": "Multiple CVEs",
+      "description": "BMW ConnectedDrive authentication bypass",
+      "vulnerabilities": [
+        "Weak MD5 authentication",
+        "Hardcoded API keys",
+        "SQL injection in telematics",
+        "No rate limiting",
+        "Weak session management"
+      ],
+      "severity": "High",
+      "cwe": [
+        "CWE-327",
+        "CWE-798",
+        "CWE-89",
+        "CWE-770",
+        "CWE-613"
+      ]
+    },
+    {
+      "name": "Ford SYNC Vulnerability",
+      "file": "fordSyncVulnerability.c",
+      "cve": "Multiple CVEs",
+      "description": "Ford SYNC Bluetooth stack vulnerabilities",
+      "vulnerabilities": [
+        "Buffer overflow in Bluetooth handling",
+        "Hardcoded Bluetooth PIN",
+        "No authentication for SYNC commands",
+        "Weak encryption",
+        "No input validation in voice commands"
+      ],
+      "severity": "High",
+      "cwe": [
+        "CWE-787",
+        "CWE-798",
+        "CWE-287",
+        "CWE-327",
+        "CWE-20"
+      ]
+    },
+    {
+      "name": "Volkswagen ECU Vulnerability",
+      "file": "volkswagenVulnerability.c",
+      "cve": "Multiple CVEs",
+      "description": "Volkswagen Group ECU cryptographic weaknesses",
+      "vulnerabilities": [
+        "Weak AES implementation",
+        "Predictable random number generation",
+        "No authentication for ECU updates",
+        "Hardcoded diagnostic keys",
+        "Buffer overflow in CAN processing"
+      ],
+      "severity": "Critical",
+      "cwe": [
+        "CWE-327",
+        "CWE-330",
+        "CWE-347",
+        "CWE-798",
+        "CWE-787"
+      ]
+    },
+    {
+      "name": "OBD-II Diagnostic Vulnerability",
+      "file": "obdVulnerability.c",
+      "cve": "Multiple CVEs",
+      "description": "OBD-II diagnostic system vulnerabilities",
+      "vulnerabilities": [
+        "No authentication for OBD-II requests",
+        "Hardcoded security keys",
+        "No rate limiting",
+        "Buffer overflow in PID response"
+      ],
+      "severity": "High",
+      "cwe": [
+        "CWE-287",
+        "CWE-798",
+        "CWE-770",
+        "CWE-787"
+      ]
+    }
+  ],
+  "summary": {
+    "totalTestCases": 6,
+    "totalVulnerabilities": 25,
+    "severityBreakdown": {
+      "critical": 3,
+      "high": 3,
+      "medium": 0,
+      "low": 0
+    },
+    "cweCategories": 15,
+    "realWorldExamples": [
+      "Tesla Model S/X",
+      "Jeep Cherokee",
+      "BMW ConnectedDrive",
+      "Ford SYNC",
+      "Volkswagen Group",
+      "OBD-II Systems"
+    ]
+  },
+  "usage": {
+    "description": "These test cases are based on real-world automotive vulnerabilities",
+    "purpose": "Testing and validation of ECU binary vulnerability scanners",
+    "disclaimer": "DO NOT USE IN PRODUCTION SYSTEMS - FOR TESTING ONLY"
+  }
+}

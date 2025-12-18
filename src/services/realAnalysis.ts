@@ -279,27 +279,41 @@ async function fetchRepositoryContents(
                 headers['Authorization'] = `token ${accessToken}`;
             }
 
+            console.log(`[realAnalysis] Fetching GitHub repo: ${owner}/${repoName}`);
+
             // Get repo info
-            const repoResponse = await fetch(
-                `https://api.github.com/repos/${owner}/${repoName}`,
-                { headers }
-            );
+            let repoResponse;
+            try {
+                repoResponse = await fetch(
+                    `https://api.github.com/repos/${owner}/${repoName}`,
+                    { headers }
+                );
+            } catch (fetchError) {
+                console.error('[realAnalysis] Network error fetching repo:', fetchError);
+                throw new Error(`Network error: ${fetchError instanceof Error ? fetchError.message : 'Failed to connect to GitHub'}`);
+            }
 
             if (!repoResponse.ok) {
-                throw new Error(`Failed to access repository: ${repoResponse.status}`);
+                const errorText = await repoResponse.text();
+                console.error('[realAnalysis] GitHub API error:', repoResponse.status, errorText);
+                throw new Error(`Failed to access repository: ${repoResponse.status} - ${errorText}`);
             }
 
             const repoData = await repoResponse.json();
-            const defaultBranch = branch || repoData.default_branch;
+            const defaultBranch = branch || repoData.default_branch || 'main';
+            console.log(`[realAnalysis] Using branch: ${defaultBranch}`);
 
             // Get tree recursively
+            console.log('[realAnalysis] Fetching file tree...');
             const treeResponse = await fetch(
                 `https://api.github.com/repos/${owner}/${repoName}/git/trees/${defaultBranch}?recursive=1`,
                 { headers }
             );
 
             if (!treeResponse.ok) {
-                throw new Error(`Failed to fetch repository tree: ${treeResponse.status}`);
+                const errorText = await treeResponse.text();
+                console.error('[realAnalysis] GitHub API error fetching tree:', treeResponse.status, errorText);
+                throw new Error(`Failed to fetch repository tree: ${treeResponse.status} - ${errorText}`);
             }
 
             const treeData = await treeResponse.json();
@@ -577,52 +591,103 @@ export async function runRealRepositoryAnalysis(
         }
 
         await addLogEntry(scanId, 'cloning', `Fetched ${files.length} source files for analysis`);
+        console.log(`[realAnalysis] Fetched ${files.length} files:`, files.map(f => f.path));
 
-        // Stage 2: SAST Pattern Matching
+        if (files.length === 0) {
+            console.warn('[realAnalysis] WARNING: No files fetched from repository! Check GitHub API access.');
+            await addLogEntry(scanId, 'warning', 'No source files found in repository');
+        }
+
+        // Stage 2: SAST Pattern Matching (always runs)
+        console.log('[realAnalysis] Running SAST pattern matching...');
         await addLogEntry(scanId, 'sast', 'Running SAST pattern matching...');
         const sastVulns = runSASTAnalysis(files);
+        console.log(`[realAnalysis] SAST found ${sastVulns.length} potential issues`);
         await addLogEntry(scanId, 'sast', `SAST found ${sastVulns.length} potential issues`);
 
-        // Stage 3: AI Analysis
-        await addLogEntry(scanId, 'ai_analysis', 'Running AI-powered deep analysis...');
-        const aiResults = await runAIAnalysis(files, geminiApiKey, metadata.ecuName);
-        await addLogEntry(scanId, 'ai_analysis', `AI found ${aiResults.vulnerabilities.length} additional issues`);
+        // Stage 3: AI Analysis (optional - only if API key provided)
+        let aiResults = {
+            vulnerabilities: [] as Vulnerability[],
+            sbomComponents: [] as any[],
+            complianceResults: [] as any[],
+            executiveSummary: '',
+        };
 
-        // Combine and deduplicate vulnerabilities
+        if (geminiApiKey && geminiApiKey.length > 0) {
+            console.log('[realAnalysis] Running AI analysis with Gemini...');
+            await addLogEntry(scanId, 'ai_analysis', 'Running AI-powered deep analysis...');
+            aiResults = await runAIAnalysis(files, geminiApiKey, metadata.ecuName);
+            console.log(`[realAnalysis] AI found ${aiResults.vulnerabilities.length} additional issues`);
+            await addLogEntry(scanId, 'ai_analysis', `AI found ${aiResults.vulnerabilities.length} additional issues`);
+        } else {
+            console.log('[realAnalysis] Skipping AI analysis (no API key)');
+            await addLogEntry(scanId, 'ai_analysis', 'AI analysis skipped (no Gemini API key configured)');
+        }
+
+        // Combine vulnerabilities (SAST + AI)
         const allVulns = [...sastVulns, ...aiResults.vulnerabilities];
+        console.log(`[realAnalysis] Total vulnerabilities to insert: ${allVulns.length}`);
 
         // Stage 4: Store results
         await addLogEntry(scanId, 'storing', 'Storing analysis results...');
 
-        // Insert vulnerabilities
+        console.log(`[realAnalysis] Inserting ${allVulns.length} vulnerabilities for scan ${scanId}`);
+
+        // Insert vulnerabilities with proper error handling
         for (const vuln of allVulns) {
-            await supabase.from('vulnerabilities').insert({
+            const vulnData = {
                 scan_id: scanId,
-                ...vuln,
-                status: 'new',
-            });
+                title: vuln.title,
+                description: vuln.description || null,
+                severity: vuln.severity as 'critical' | 'high' | 'medium' | 'low',
+                cwe_id: vuln.cwe_id || null,
+                cvss_score: vuln.cvss_score || null,
+                affected_component: vuln.affected_component || null,
+                line_number: vuln.line_number || null,
+                code_snippet: vuln.code_snippet || null,
+                remediation: vuln.remediation || null,
+                detection_method: vuln.detection_method || 'sast',
+                status: 'new' as const,
+            };
+
+            const { error } = await supabase.from('vulnerabilities').insert(vulnData);
+            if (error) {
+                console.error('[realAnalysis] Failed to insert vulnerability:', error, vulnData);
+            } else {
+                console.log('[realAnalysis] Inserted vulnerability:', vuln.title);
+            }
         }
 
-        // Insert SBOM components
+        console.log(`[realAnalysis] Inserting ${aiResults.sbomComponents.length} SBOM components`);
+
+        // Insert SBOM components with error handling
         for (const component of aiResults.sbomComponents) {
-            await supabase.from('sbom_components').insert({
+            const { error } = await supabase.from('sbom_components').insert({
                 scan_id: scanId,
                 component_name: component.component_name,
-                version: component.version,
-                license: component.license,
+                version: component.version || null,
+                license: component.license || null,
             });
+            if (error) {
+                console.error('[realAnalysis] Failed to insert SBOM component:', error);
+            }
         }
 
-        // Insert compliance results
+        console.log(`[realAnalysis] Inserting ${aiResults.complianceResults.length} compliance results`);
+
+        // Insert compliance results with error handling
         for (const result of aiResults.complianceResults) {
-            await supabase.from('compliance_results').insert({
+            const { error } = await supabase.from('compliance_results').insert({
                 scan_id: scanId,
                 framework: result.framework,
-                rule_id: result.rule_id,
-                rule_description: result.rule_description,
-                status: result.status,
-                details: result.details,
+                rule_id: result.rule_id || 'RULE-001',
+                rule_description: result.rule_description || null,
+                status: result.status as 'pass' | 'fail' | 'warning',
+                details: result.details || null,
             });
+            if (error) {
+                console.error('[realAnalysis] Failed to insert compliance result:', error);
+            }
         }
 
         // Calculate risk score

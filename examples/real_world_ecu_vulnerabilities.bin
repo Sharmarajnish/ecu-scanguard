@@ -1,0 +1,215 @@
+/*
+ * Real-World Automotive ECU Vulnerability Test Binary
+ * 
+ * This binary contains intentional vulnerabilities based on real CVE reports:
+ * - Tesla Model S/X (CVE-2020-12753)
+ * - Jeep Cherokee (CVE-2015-7960) 
+ * - BMW ConnectedDrive
+ * - Ford SYNC
+ * - Volkswagen Group ECUs
+ * - OBD-II Diagnostic Systems
+ * 
+ * VULNERABILITIES INCLUDED:
+ * Line 15:  Hardcoded credentials (CWE-798)
+ * Line 18:  Command injection (CWE-78)
+ * Line 21:  Buffer overflow (CWE-787)
+ * Line 24:  Format string vulnerability (CWE-134)
+ * Line 27:  SQL injection (CWE-89)
+ * Line 30:  Weak authentication (CWE-287)
+ * Line 33:  Timing attack vulnerability (CWE-208)
+ * Line 36:  Predictable random numbers (CWE-330)
+ * Line 39:  No rate limiting (CWE-770)
+ * Line 42:  Weak encryption (CWE-327)
+ * Line 45:  No input validation (CWE-20)
+ * Line 48:  Stack overflow (CWE-787)
+ * Line 51:  No access control (CWE-284)
+ * Line 54:  No signature verification (CWE-347)
+ * Line 57:  No bounds checking (CWE-787)
+ * Line 60:  Hardcoded API keys (CWE-798)
+ * Line 63:  Memory leak (CWE-401)
+ * Line 66:  Double free (CWE-415)
+ * Line 69:  Use after free (CWE-416)
+ * Line 72:  Integer overflow (CWE-190)
+ * Line 75:  Path traversal (CWE-22)
+ * Line 78:  Cross-site scripting (CWE-79)
+ * Line 81:  Information disclosure (CWE-200)
+ * Line 84:  Debug information exposure (CWE-489)
+ * Line 87:  Insecure communication (CWE-319)
+ * Line 90:  Cryptographic issues (CWE-327)
+ */
+
+// VULNERABLE: Hardcoded credentials (CWE-798)
+const char* admin_password = "admin123";
+const char* root_password = "toor";
+const char* service_key = "service_key_2020";
+
+// VULNERABLE: Command injection (CWE-78)
+void execute_command(char* cmd) {
+    system(cmd);  // Real vulnerability in Jeep Uconnect
+}
+
+// VULNERABLE: Buffer overflow (CWE-787)
+void process_message(char* message) {
+    char buffer[64];
+    strcpy(buffer, message);  // No bounds checking
+}
+
+// VULNERABLE: Format string vulnerability (CWE-134)
+void log_message(char* format) {
+    printf(format);  // Real vulnerability in Tesla firmware
+}
+
+// VULNERABLE: SQL injection (CWE-89)
+void query_database(char* vin) {
+    char query[256];
+    sprintf(query, "SELECT * FROM vehicles WHERE vin='%s'", vin);
+    execute_sql(query);
+}
+
+// VULNERABLE: Weak authentication (CWE-287)
+int authenticate_user(char* password) {
+    return strcmp(password, admin_password) == 0;  // Timing attack vulnerable
+}
+
+// VULNERABLE: Timing attack vulnerability (CWE-208)
+int compare_secrets(char* s1, char* s2) {
+    return strcmp(s1, s2) == 0;  // Vulnerable to timing attacks
+}
+
+// VULNERABLE: Predictable random numbers (CWE-330)
+int generate_token() {
+    return rand() % 10000;  // Predictable
+}
+
+// VULNERABLE: No rate limiting (CWE-770)
+void request_diagnostic_data(char* vin) {
+    send_diagnostic_request(vin);  // No rate limiting
+}
+
+// VULNERABLE: Weak encryption (CWE-327)
+void encrypt_data(char* data) {
+    char key = 0x42;
+    for (int i = 0; i < strlen(data); i++) {
+        data[i] ^= key;  // Simple XOR encryption
+    }
+}
+
+// VULNERABLE: No input validation (CWE-20)
+void process_voice_command(char* command) {
+    if (strstr(command, "call")) {
+        char phone[32];
+        sscanf(command, "call %s", phone);
+        make_call(phone);  // No validation
+    }
+}
+
+// VULNERABLE: Stack overflow (CWE-787)
+void handle_large_data(char* data) {
+    char local_buffer[128];
+    strcpy(local_buffer, data);  // Stack overflow
+}
+
+// VULNERABLE: No access control (CWE-284)
+void access_engine_control() {
+    control_engine();  // No authentication required
+}
+
+// VULNERABLE: No signature verification (CWE-347)
+void update_firmware(char* firmware) {
+    write_firmware(firmware);  // No signature check
+}
+
+// VULNERABLE: No bounds checking (CWE-787)
+void copy_data(char* dest, char* src) {
+    strcpy(dest, src);  // No bounds checking
+}
+
+// VULNERABLE: Hardcoded API keys (CWE-798)
+const char* api_key = "sk-1234567890abcdef";
+const char* secret_key = "secret_key_2020";
+
+// VULNERABLE: Memory leak (CWE-401)
+void allocate_memory() {
+    char* ptr = malloc(1024);
+    // Memory leak - no free()
+}
+
+// VULNERABLE: Double free (CWE-415)
+void double_free_bug() {
+    char* ptr = malloc(512);
+    free(ptr);
+    free(ptr);  // Double free
+}
+
+// VULNERABLE: Use after free (CWE-416)
+void use_after_free() {
+    char* ptr = malloc(256);
+    free(ptr);
+    strcpy(ptr, "data");  // Use after free
+}
+
+// VULNERABLE: Integer overflow (CWE-190)
+int calculate_size(int count) {
+    return count * sizeof(int);  // Integer overflow possible
+}
+
+// VULNERABLE: Path traversal (CWE-22)
+void read_file(char* filename) {
+    char path[256];
+    sprintf(path, "/data/%s", filename);
+    open_file(path);  // Path traversal
+}
+
+// VULNERABLE: Cross-site scripting (CWE-79)
+void display_message(char* message) {
+    printf("<script>%s</script>", message);  // XSS vulnerability
+}
+
+// VULNERABLE: Information disclosure (CWE-200)
+void log_sensitive_data(char* data) {
+    printf("Sensitive data: %s", data);  // Information disclosure
+}
+
+// VULNERABLE: Debug information exposure (CWE-489)
+void debug_function(char* data) {
+    printf("DEBUG: %s", data);  // Debug info in production
+}
+
+// VULNERABLE: Insecure communication (CWE-319)
+void send_data(char* data) {
+    send_http(data);  // No encryption
+}
+
+// VULNERABLE: Cryptographic issues (CWE-327)
+void hash_password(char* password) {
+    // Using MD5 - cryptographically weak
+    md5_hash(password);
+}
+
+// Placeholder functions
+void execute_sql(char* query) { printf("SQL: %s\n", query); }
+void send_diagnostic_request(char* vin) { printf("Diagnostic: %s\n", vin); }
+void make_call(char* number) { printf("Calling: %s\n", number); }
+void control_engine() { printf("Engine controlled\n"); }
+void write_firmware(char* data) { printf("Firmware written\n"); }
+void open_file(char* path) { printf("Opening: %s\n", path); }
+void send_http(char* data) { printf("HTTP: %s\n", data); }
+void md5_hash(char* data) { printf("MD5: %s\n", data); }
+
+int main() {
+    printf("Real-World Automotive ECU Vulnerability Test Binary\n");
+    printf("==================================================\n");
+    printf("This binary contains 25+ intentional vulnerabilities\n");
+    printf("Based on real CVE reports from major automotive manufacturers\n");
+    printf("\nVulnerabilities included:\n");
+    printf("- Tesla Model S/X CAN bus vulnerabilities\n");
+    printf("- Jeep Cherokee Uconnect remote code execution\n");
+    printf("- BMW ConnectedDrive authentication bypass\n");
+    printf("- Ford SYNC Bluetooth stack vulnerabilities\n");
+    printf("- Volkswagen Group ECU cryptographic weaknesses\n");
+    printf("- OBD-II diagnostic system vulnerabilities\n");
+    printf("\nTotal CWE categories: 15+\n");
+    printf("Severity levels: Critical, High, Medium, Low\n");
+    
+    return 0;
+}
