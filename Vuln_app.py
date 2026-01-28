@@ -123,3 +123,23 @@ def trigger_error():
     except Exception as e:
         # BAD: Exposing full error details to users
         return f"Error: {str(e)}, Stack: {e.__traceback__}"
+
+def withdraw(amount):
+    """Vulnerable to race condition"""
+    global balance
+    # BAD: No locking mechanism
+    if balance >= amount:
+        # Race condition window here
+        balance -= amount
+        return True
+    return False
+
+# Vulnerability 14: Information Disclosure
+@app.route('/error')
+def trigger_error():
+    """Exposes sensitive information in error messages"""
+    try:
+        result = 1 / 0
+    except Exception as e:
+        # BAD: Exposing full error details to users
+        return f"Error: {str(e)}, Stack: {e.__traceback__}"
